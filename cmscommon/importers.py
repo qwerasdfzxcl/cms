@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 def import_testcases_from_zipfile(
         session, file_cacher, dataset,
-        archive, input_re, output_re, overwrite, public):
+        archive, input_re, output_re, overwrite, public, polygon):
     """Import testcases from a zipped archive
 
     session (Session): session to use to add the testcases.
@@ -40,6 +40,7 @@ def import_testcases_from_zipfile(
         filenames (e.g., re.compile(r"output_(.*).txt)).
     overwrite (bool): whether to overwrite existing testcases.
     public (bool): whether to mark the new testcases as public.
+    polygon (bool): whether to read files as Polygon format
 
     return ((unicode, unicode)): subject and text of a message describing
         the outcome of the operation.
@@ -51,6 +52,25 @@ def import_testcases_from_zipfile(
             tests = dict()
             # Match input/output file names to testcases' codenames.
             for filename in archive_zfp.namelist():
+                if polygon:
+                    # Polygon package reader
+                    try:
+                        codename = 0
+                        flag = (len(filename) >= 2 and filename[-2:] == ".a")
+                        if flag:
+                            codename = int(filename[:-2])
+                        else:
+                            codename = int(filename)
+
+                        if codename not in tests:
+                            tests[codename] = [None, None]
+                        tests[codename][1 if flag else 0] = filename
+
+                    except:
+                        pass
+                    
+                    continue
+
                 match = input_re.match(filename)
                 if match:
                     codename = match.group(1)
@@ -64,6 +84,14 @@ def import_testcases_from_zipfile(
                         if codename not in tests:
                             tests[codename] = [None, None]
                         tests[codename][1] = filename
+
+            if polygon and len(tests) > 0:
+                # rename tests
+                digits = max(len(str(max(tests.keys()))), 2)
+                rtests = dict()
+                for codename, testdata in tests.items():
+                    rtests[str(codename).zfill(digits)] = testdata
+                tests = rtests
 
             skipped_tc = []
             overwritten_tc = []

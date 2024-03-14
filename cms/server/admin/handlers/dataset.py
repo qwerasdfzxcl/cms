@@ -524,6 +524,7 @@ class AddTestcasesHandler(BaseHandler):
 
         public = self.get_argument("public", None) is not None
         overwrite = self.get_argument("overwrite", None) is not None
+        polygon = self.get_argument("polygon", None) is not None
 
         # Get input/output file names templates, or use default ones.
         input_template = self.get_argument("input_template", "input.*")
@@ -539,7 +540,7 @@ class AddTestcasesHandler(BaseHandler):
                 import_testcases_from_zipfile(
                     self.sql_session,
                     self.service.file_cacher, dataset,
-                    fp, input_re, output_re, overwrite, public)
+                    fp, input_re, output_re, overwrite, public, polygon)
         except Exception as error:
             self.service.add_notification(
                 make_datetime(), str(error), repr(error))

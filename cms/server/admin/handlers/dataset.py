@@ -31,6 +31,7 @@ import io
 import logging
 import re
 import zipfile
+import subprocess
 
 import collections
 try:
@@ -370,6 +371,34 @@ class AddManagerHandler(BaseHandler):
         task_name = task.name
         self.sql_session.close()
 
+
+        compile_ = self.get_argument("compile", None) is not None
+ 
+         if compile_:
+             try:
+                 assert manager["filename"].endswith(".cpp"), "not a cpp file"
+                 with open("/usr/local/etc/manager.cpp", "w") as cpp_file:
+                     print(manager["body"].decode("utf-8"), file = cpp_file)
+                 
+                 executable_filename = manager["filename"][:-4]
+                 compile_command = ["g++", "/usr/local/etc/manager.cpp", "-o",
+                         "/usr/local/etc/manager", "-I", "/usr/local/include/cms", "-DCMS"]
+                 subprocess.run(compile_command, check=True)
+ 
+                 with open("/usr/local/etc/manager", "rb") as executable_file:
+                     manager["body"] = executable_file.read()
+ 
+                 manager["filename"] = executable_filename
+ 
+             except Exception as error:
+                 self.service.add_notification(
+                     make_datetime(),
+                     "Manager compilation failed",
+                     repr(error))
+                 self.redirect(fallback_page)
+                 return
+ 
+ 
         try:
             digest = self.service.file_cacher.put_file_content(
                 manager["body"],

@@ -6,7 +6,20 @@
 </div>
 <form enctype="multipart/form-data" action="{{ url("dataset", dataset.id, "managers", "add") }}" method="POST">
   {{ xsrf_form_html|safe }}
-  <input type="file" name="manager"/><br/>
+  <table>
+    <tr>
+      <td>Manager:</td>
+      <td>
+        <input type="file" name="manager"/>
+      </td>
+    </tr>
+    <tr>
+      <td>Compile</td>
+      <td>
+        <input type="checkbox" name="compile">
+      </td>
+    </tr>
+  </table>
   <input type="submit" value="Upload">
   <input type="Reset" >
 </form>

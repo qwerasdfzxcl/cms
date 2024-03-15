@@ -442,6 +442,7 @@ $("select[name=task_type_{{ dataset.id }}]").change(function() {
       <a href="{{ url("dataset", dataset.id, "testcases", "add_multiple") }}">Add multiple testcases</a>
 {% endif %}
       <a href="{{ url("dataset", dataset.id, "testcases", "download") }}">Download all testcases</a>
+      <a href="{{ url("dataset", dataset.id, "testcases", "subtask") }}">Rename all testcases (subtask format)</a>
       <table class="bordered" style="text-align:center">
         <thead>
           <tr>
@@ -450,7 +451,7 @@ $("select[name=task_type_{{ dataset.id }}]").change(function() {
             <th>Public</th>
             <th>Input</th>
             <th>Output</th>
-            <th>Ops</th>
+            <th scope="col" colspan="2">Ops</th>
           </tr>
         </thead>
         <tbody>
@@ -469,6 +470,9 @@ $("select[name=task_type_{{ dataset.id }}]").change(function() {
             </td>
             <td>
               <a onclick="CMS.AWSUtils.ajax_delete('{{ url("dataset", dataset.id, "testcase", testcase.id, "delete") }}');">Delete</a>
+            </td>
+            <td>
+              <a onclick="CMS.AWSUtils.ajax_post('{{ url("dataset", dataset.id, "testcase", testcase.id, "subtask") }}');">Subtask</a>
             </td>
           </tr>
           {% endfor %}

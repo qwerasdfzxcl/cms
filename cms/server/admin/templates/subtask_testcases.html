@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block core %}
+<div class="core_title">
+  <h1><a href="{{ url("task", task.id) }}">{{ task.title }} ({{ task.name }})</a> - Rename all testcases (subtask format)</h1>
+</div>
+
+<p>
+  Are you sure you want to rename all testcases of Dataset {{ dataset.description }}?
+  <br>
+  This will rename {{ testcases_count }} testcase(s).
+</p>
+<br>
+<form enctype="multipart/form-data" action="{{ url("dataset", dataset.id, "testcases", "subtask") }}" method="POST">
+  {{ xsrf_form_html|safe }}
+  <input type="submit" value="Yes">
+  <a href="{{ url("task", task.id) }}"><input type="button" value="No"></a>
+</form>
+{% endblock core %}

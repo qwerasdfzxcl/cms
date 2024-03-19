@@ -619,7 +619,7 @@ class SubtaskTestcaseHandler(BaseHandler):
          dataset = self.safe_get_item(Dataset, dataset_id)
  
          try:
-             validator = self.sql_session.query(Manager).filter_by(filename="validator").first()
+            validator = self.sql_session.query(Manager).filter_by(filename="validator", dataset_id=dataset_id).first()
              if validator is None:
                  logger.error("Validator does not exist.")
                  raise ValueError("Validator does not exist.")
@@ -696,7 +696,7 @@ class SubtaskTestcasesHandler(BaseHandler):
         task = dataset.task
         
         try:
-            validator = self.sql_session.query(Manager).filter_by(filename="validator").first()
+            validator = self.sql_session.query(Manager).filter_by(filename="validator", dataset_id=dataset_id).first()
             if validator is None:
                 logger.error("Validator does not exist.")
                 raise ValueError("Validator does not exist.")

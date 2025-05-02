@@ -31,7 +31,7 @@ import io
 import logging
 import re
 import zipfile
-import subprocess.
+import subprocess
 
 from sqlalchemy import func
 
@@ -378,29 +378,29 @@ class AddManagerHandler(BaseHandler):
 
         compile_ = self.get_argument("compile", None) is not None
  
-         if compile_:
-             try:
-                 assert manager["filename"].endswith(".cpp"), "not a cpp file"
-                 with open("/usr/local/etc/manager.cpp", "w") as cpp_file:
-                     print(manager["body"].decode("utf-8"), file = cpp_file)
-                 
-                 executable_filename = manager["filename"][:-4]
-                 compile_command = ["g++", "/usr/local/etc/manager.cpp", "-o",
-                         "/usr/local/etc/manager", "-I", "/usr/local/include/cms", "-DCMS"]
-                 subprocess.run(compile_command, check=True)
- 
-                 with open("/usr/local/etc/manager", "rb") as executable_file:
-                     manager["body"] = executable_file.read()
- 
-                 manager["filename"] = executable_filename
- 
-             except Exception as error:
-                 self.service.add_notification(
-                     make_datetime(),
-                     "Manager compilation failed",
-                     repr(error))
-                 self.redirect(fallback_page)
-                 return
+        if compile_:
+            try:
+                assert manager["filename"].endswith(".cpp"), "not a cpp file"
+                with open("/usr/local/etc/manager.cpp", "w") as cpp_file:
+                    print(manager["body"].decode("utf-8"), file = cpp_file)
+                
+                executable_filename = manager["filename"][:-4]
+                compile_command = ["g++", "/usr/local/etc/manager.cpp", "-o",
+                        "/usr/local/etc/manager", "-I", "/usr/local/include/cms", "-DCMS"]
+                subprocess.run(compile_command, check=True)
+
+                with open("/usr/local/etc/manager", "rb") as executable_file:
+                    manager["body"] = executable_file.read()
+
+                manager["filename"] = executable_filename
+
+            except Exception as error:
+                self.service.add_notification(
+                    make_datetime(),
+                    "Manager compilation failed",
+                    repr(error))
+                self.redirect(fallback_page)
+                return
  
  
         try:
@@ -610,64 +610,64 @@ class DeleteTestcaseHandler(BaseHandler):
 
 
 class SubtaskTestcaseHandler(BaseHandler):
-     """Rename a testcase as subtask format using validator.
- 
-     """
-     @require_permission(BaseHandler.PERMISSION_ALL)
-     def post(self, dataset_id, testcase_id):
-         testcase = self.safe_get_item(Testcase, testcase_id)
-         dataset = self.safe_get_item(Dataset, dataset_id)
- 
-         try:
+    """Rename a testcase as subtask format using validator.
+
+    """
+    @require_permission(BaseHandler.PERMISSION_ALL)
+    def post(self, dataset_id, testcase_id):
+        testcase = self.safe_get_item(Testcase, testcase_id)
+        dataset = self.safe_get_item(Dataset, dataset_id)
+
+        try:
             validator = self.sql_session.query(Manager).filter_by(filename="validator", dataset_id=dataset_id).first()
-             if validator is None:
-                 logger.error("Validator does not exist.")
-                 raise ValueError("Validator does not exist.")
- 
-             sandbox = create_sandbox(self.service.file_cacher, name="validate")
- 
-             sandbox.create_file_from_storage("validator", validator.digest, executable=True)
-             sandbox.create_file_from_storage("input.txt", testcase.input)
-             sandbox.create_file("output.txt")
- 
-             commands = [["./validator"]]
- 
-             sandbox.stdin_file = "input.txt"
-             sandbox.stdout_file = "output.txt"
- 
-             sandbox.allow_writing_all()
- 
-             stats = generic_step(sandbox, commands, "validation")
-             if stats is None:
-                 logger.error("Sandbox failed during validation step. "
-                             "See previous logs for the reason.")
-                 raise ValueError("Validation failed.")
- 
-             with sandbox.get_file_text(sandbox.stdout_file) as stdout_file:
-                 try:
-                     subtask_str = stdout_file.readline().strip()
-                 except UnicodeDecodeError as error:
-                     logger.error("Manager stdout (outcome) is not valid UTF-8. %r",
-                                 error)
-                     raise ValueError("Cannot decode the outcome.")
-             
-             if len(subtask_str) > 0:
-                 suffix = "-" + subtask_str
-             else:
-                 suffix = ""
-             
-             testcase.codename = testcase.codename.split("-")[0] + suffix
-             
-             if self.try_commit():
-                 self.write("./%d" % dataset.task.id)
-             else:
-                 raise ValueError("Something went wrong.")
-         
-         except Exception as error:
-             self.service.add_notification(
-                 make_datetime(), str(error), repr(error))
-             self.write("./%d" % dataset.task.id)
-             return
+            if validator is None:
+                logger.error("Validator does not exist.")
+                raise ValueError("Validator does not exist.")
+
+            sandbox = create_sandbox(self.service.file_cacher, name="validate")
+
+            sandbox.create_file_from_storage("validator", validator.digest, executable=True)
+            sandbox.create_file_from_storage("input.txt", testcase.input)
+            sandbox.create_file("output.txt")
+
+            commands = [["./validator"]]
+
+            sandbox.stdin_file = "input.txt"
+            sandbox.stdout_file = "output.txt"
+
+            sandbox.allow_writing_all()
+
+            stats = generic_step(sandbox, commands, "validation")
+            if stats is None:
+                logger.error("Sandbox failed during validation step. "
+                            "See previous logs for the reason.")
+                raise ValueError("Validation failed.")
+
+            with sandbox.get_file_text(sandbox.stdout_file) as stdout_file:
+                try:
+                    subtask_str = stdout_file.readline().strip()
+                except UnicodeDecodeError as error:
+                    logger.error("Manager stdout (outcome) is not valid UTF-8. %r",
+                                error)
+                    raise ValueError("Cannot decode the outcome.")
+            
+            if len(subtask_str) > 0:
+                suffix = "-" + subtask_str
+            else:
+                suffix = ""
+            
+            testcase.codename = testcase.codename.split("-")[0] + suffix
+            
+            if self.try_commit():
+                self.write("./%d" % dataset.task.id)
+            else:
+                raise ValueError("Something went wrong.")
+        
+        except Exception as error:
+            self.service.add_notification(
+                make_datetime(), str(error), repr(error))
+            self.write("./%d" % dataset.task.id)
+            return
  
 
 class SubtaskTestcasesHandler(BaseHandler):

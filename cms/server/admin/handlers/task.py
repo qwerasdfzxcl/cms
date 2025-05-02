@@ -186,6 +186,7 @@ class TaskHandler(BaseHandler):
                                    "TaskTypeOptions_%d_" % dataset.id)
                 self.get_score_type(attrs, "score_type_%d" % dataset.id,
                                     "score_type_parameters_%d" % dataset.id)
+                self.get_subtask_count(attrs, "subtask_count_%d" % dataset.id)
 
                 # Update the dataset.
                 dataset.set_attrs(attrs)

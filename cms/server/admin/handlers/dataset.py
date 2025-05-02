@@ -624,32 +624,31 @@ class SubtaskTestcaseHandler(BaseHandler):
                 logger.error("Validator does not exist.")
                 raise ValueError("Validator does not exist.")
 
-            sandbox = create_sandbox(self.service.file_cacher, name="validate")
+            subtask_str = ""
 
-            sandbox.create_file_from_storage("validator", validator.digest, executable=True)
-            sandbox.create_file_from_storage("input.txt", testcase.input)
-            sandbox.create_file("output.txt")
+            for g in range(1, dataset.subtask_count + 1):
 
-            commands = [["./validator"]]
+                sandbox = create_sandbox(self.service.file_cacher, name="validate")
 
-            sandbox.stdin_file = "input.txt"
-            sandbox.stdout_file = "output.txt"
+                sandbox.create_file_from_storage("validator", validator.digest, executable=True)
+                sandbox.create_file_from_storage("input.txt", testcase.input)
 
-            sandbox.allow_writing_all()
+                commands = [["./validator", "--group", str(g)]]
 
-            stats = generic_step(sandbox, commands, "validation")
-            if stats is None:
-                logger.error("Sandbox failed during validation step. "
-                            "See previous logs for the reason.")
-                raise ValueError("Validation failed.")
+                sandbox.stdin_file = "input.txt"
 
-            with sandbox.get_file_text(sandbox.stdout_file) as stdout_file:
-                try:
-                    subtask_str = stdout_file.readline().strip()
-                except UnicodeDecodeError as error:
-                    logger.error("Manager stdout (outcome) is not valid UTF-8. %r",
-                                error)
-                    raise ValueError("Cannot decode the outcome.")
+                stats = generic_step(sandbox, commands, "validation")
+                if stats is None:
+                    logger.error("Sandbox failed during validation step. "
+                              "See previous logs for the reason.")
+                    raise ValueError("Validation failed.")
+                elif stats['exit_status'] == 'ok':
+                    if g <= 9:
+                        subtask_str += str(g)
+                    elif g <= 9 + 26:
+                        subtask_str += chr(ord('A') + i - 10)
+                    elif g <= 9 + 26 + 26:
+                        subtask_str += chr(ord('a') + i - 10 - 26)
             
             if len(subtask_str) > 0:
                 suffix = "-" + subtask_str
@@ -708,33 +707,32 @@ class SubtaskTestcasesHandler(BaseHandler):
             commands = [["./validator"]]
 
             for testcase in dataset.testcases.values():
-                if sandbox.file_exists("input.txt"):
-                    sandbox.remove_file("input.txt")
-                if sandbox.file_exists("output.txt"):
-                    sandbox.remove_file("output.txt")
+                subtask_str = ""
 
-                sandbox.create_file_from_storage("input.txt", testcase.input)
-                sandbox.create_file("output.txt")
+                for g in range(1, dataset.subtask_count + 1):
 
-                sandbox.stdin_file = "input.txt"
-                sandbox.stdout_file = "output.txt"
+                    sandbox = create_sandbox(self.service.file_cacher, name="validate")
 
-                sandbox.allow_writing_all()
+                    sandbox.create_file_from_storage("validator", validator.digest, executable=True)
+                    sandbox.create_file_from_storage("input.txt", testcase.input)
 
-                stats = generic_step(sandbox, commands, "validation")
-                if stats is None:
-                    logger.error("Sandbox failed during validation step. "
+                    commands = [["./validator", "--group", str(g)]]
+
+                    sandbox.stdin_file = "input.txt"
+
+                    stats = generic_step(sandbox, commands, "validation")
+                    if stats is None:
+                        logger.error("Sandbox failed during validation step. "
                                 "See previous logs for the reason.")
-                    raise ValueError("Validation failed.")
+                        raise ValueError("Validation failed.")
+                    elif stats['exit_status'] == 'ok':
+                        if g <= 9:
+                            subtask_str += str(g)
+                        elif g <= 9 + 26:
+                            subtask_str += chr(ord('A') + i - 10)
+                        elif g <= 9 + 26 + 26:
+                            subtask_str += chr(ord('a') + i - 10 - 26)
 
-                with sandbox.get_file_text(sandbox.stdout_file) as stdout_file:
-                    try:
-                        subtask_str = stdout_file.readline().strip()
-                    except UnicodeDecodeError as error:
-                        logger.error("Manager stdout (outcome) is not valid UTF-8. %r",
-                                    error)
-                        raise ValueError("Cannot decode the outcome.")
-                
                 if len(subtask_str) > 0:
                     suffix = "-" + subtask_str
                 else:

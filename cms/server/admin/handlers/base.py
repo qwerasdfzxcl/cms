@@ -501,6 +501,30 @@ class BaseHandler(CommonRequestHandler):
             raise ValueError("Score type parameters are invalid JSON.")
         dest["score_type"] = name
         dest["score_type_parameters"] = params
+    
+    def get_subtask_count(self, dest, field):
+        """Parse the subtask count.
+
+        Read the argument with the given name and use its value to set
+        the "subtask_count" item of the given dictionary.
+
+        dest (dict): a place to store the result.
+        field (string): the name of the argument to use.
+
+        """
+        value = self.get_argument(field, None)
+        if value is None:
+            return
+        if len(value) == 0:
+            dest["subtask_count"] = None
+        else:
+            try:
+                value = int(value)
+            except:
+                raise ValueError("Can't cast %s to int." % value)
+            if not 0 < value:
+                raise ValueError("Invalid subtask count.")
+            dest["subtask_count"] = value
 
     def get_password(self, dest, old_password, allow_unset):
         """Parse a (possibly hashed) password.

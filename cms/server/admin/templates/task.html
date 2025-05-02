@@ -429,6 +429,13 @@ $("select[name=task_type_{{ dataset.id }}]").change(function() {
           </td>
           <td><textarea name="score_type_parameters_{{ dataset.id }}">{{ dataset.score_type_parameters|tojson|forceescape }}</textarea></td>
         </tr>
+        <tr>
+          <td>
+            <span class="info" title="Number of subtasks for the auto subtask system."></span>
+            Subtask Count
+          </td>
+          <td><input type="text" name="subtask_count_{{ dataset.id }}" value="{{ dataset.subtask_count if dataset.subtask_count is not none else "" }}"/></td>
+        </tr>
       </table>
       <div class="hr"></div>
     </div>

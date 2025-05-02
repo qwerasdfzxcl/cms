@@ -412,6 +412,12 @@ class Dataset(Base):
         JSONB,
         nullable=False)
 
+    # Number of subtasks for the auto subtask system.
+    subtask_count = Column(
+        BigInteger,
+        CheckConstraint("subtask_count > 0"),
+        nullable=True)
+
     # These one-to-many relationships are the reversed directions of
     # the ones defined in the "child" classes using foreign keys.
 
